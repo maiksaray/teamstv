@@ -11,18 +11,24 @@ html, body {
 }
 
 .gridster .gs-w {
-  background: #eee
+  background: white;
 }
 
 .gridster ul {
-  background-color: white;
+  background-color: white !important;
+  background-image: url(../static/img/logo.jpg);
+  background-repeat: no-repeat;
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+  background-size: cover;
+  background-position: center center;
 }
 
 .gridster li {
   font-size: 1em;
   text-align: center;
   line-height: 100%;
-  /*border: 1px solid black;*/
 }
 
 ul {
@@ -42,4 +48,18 @@ li iframe {
   border: none;
   width: 100%;
   height: 100%;
+}
+
+.owl-carousel, 
+.owl-stage-outer, 
+.owl-stage,
+.owl-item {
+  height: 100%;
+}
+
+.owl-carousel .owl-item img {
+  max-width: 100% !important;
+  max-height: 100% !important;
+  width: auto !important;
+  height: 100% !important;
 }

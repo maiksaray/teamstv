@@ -1,38 +1,44 @@
-import json
+from __future__ import print_function
+import sys
 
+
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+
+import json
 from flask import Flask, render_template, send_file, jsonify
 import os
-
 from lib import calendar, misc
 import settings
 from lib.telebot import Telebot
 
+
 app = Flask(__name__)
-tb = Telebot()
+tb = Telebot(settings.BOT_TOKEN)
 
-@app.route('/traffic')
-def show_traffic():
-    return render_template("traffic.html")
+@app.route('/fin_curr')
+def show_fin_curr():
+    return render_template("fin_curr.html")
 
-@app.route('/rss')
-def show_rss():
-    return render_template("rss.html")
+@app.route('/news')
+def show_news():
+    return render_template("news.html")
 
-@app.route('/image')
-def show_image():
-    full_filename = os.path.join(settings.IMG_FOLDER, 'Untitled.png')
-    return render_template("image.html", user_image=full_filename)
-
+@app.route('/clock')
+def show_clock():
+    return render_template("clock.html")
 
 @app.route('/next')
 def next_event():
     tb.handle({'text':'/next'})
     return jsonify('OK')
 
+
 @app.route('/resume')
 def resume_event():
     tb.handle({'text':'/resume'})
     return jsonify('OK')
+
 
 @app.route("/telebot", methods=['GET'])
 def get_telebot():
@@ -50,33 +56,6 @@ def get_telebot():
     }
     return cmds[tb.get()]()
 
-@app.route("/front_index")
-def test_index():
-    return render_template("index.html")
-
-@app.route("/map.html")
-def get_map():
-    return render_template("map.html")
-
-@app.route("/js/<script>")
-def get_some_js(script):
-    return send_file(os.path.join(settings.STATIC_FOLDER, "js", script), mimetype="application/json")
-
-@app.route("/html/<html>")
-def get_some_html(html):
-    return send_file(os.path.join(settings.STATIC_FOLDER, "html", html), mimetype="text/html")
-
-
-@app.route("/css/<style>")
-def get_some_css(style):
-    return send_file(os.path.join(settings.STATIC_FOLDER, "css", style), mimetype="text/css")
-
-@app.route("/js/<dir>/<file>")
-def get_nested_js(dir, file):
-    img_path = os.path.join(settings.STATIC_FOLDER, "js")
-    folder_path = os.path.join(img_path, dir)
-    filename = os.path.join(folder_path, file)
-    return send_file(filename, mimetype='application/json')
 
 @app.route("/test_json")
 def test_json():
@@ -92,21 +71,56 @@ def get_current_events():
     return json.dumps(data, cls=misc.DateTimeEncoder)
 
 
+# --- WEB CONTENT ---
+@app.route("/")
+@app.route("/index")
+def test_index():
+    return render_template("index.html")
+
+#TODO: move abs_path somewhere else out of each method
+@app.route("/js/<script>")
+def get_some_js(script):
+    abs_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), settings.STATIC_FOLDER)
+    return send_file(os.path.join(abs_path, "js", script), mimetype="application/json")
+
+
+@app.route("/css/<style>")
+def get_some_css(style):
+    abs_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), settings.STATIC_FOLDER)
+    return send_file(os.path.join(abs_path, "css", style), mimetype="text/css")
+
+@app.route("/html/<html>")
+def get_some_html(html):
+    abs_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), settings.STATIC_FOLDER)
+    return send_file(os.path.join(abs_path, "html", html), mimetype="text/html")
+
+@app.route("/js/<dir>/<file>")
+def get_nested_js(dir, file):
+    img_path = os.path.join(settings.STATIC_FOLDER, "js")
+    folder_path = os.path.join(img_path, dir)
+    abs_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), folder_path)
+    filename = os.path.join(abs_path, file)
+    return send_file(filename, mimetype='application/json')
+
+
 @app.route('/images/<folder>')
 def get_image_list(folder):
     img_path = os.path.join(settings.STATIC_FOLDER, settings.IMG_FOLDER)
     folder_path = os.path.join(img_path, folder)
-    filelist = [file for file in os.listdir(folder_path) if file.endswith(".png") or file.endswith(".jpg")]
+    abs_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), folder_path)
+    filelist = [file for file in os.listdir(abs_path) if file.endswith(".png") or file.endswith(".jpg")]
     return json.dumps(["images/"+folder+"/"+file for file in filelist])
-
 
 @app.route("/images/<folder>/<file>")
 def get_image(folder, file):
     img_path = os.path.join(settings.STATIC_FOLDER, settings.IMG_FOLDER)
     folder_path = os.path.join(img_path, folder)
-    filename = os.path.join(folder_path, file)
+    abs_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), folder_path)
+    filename = os.path.join(abs_path, file)
     return send_file(filename, mimetype='image/gif')
 
+# --- WEB CONTENT END ---
+
 if __name__ == '__main__':
-    # tb.start()
+    tb.start()
     app.run(threaded=True, host='0.0.0.0')
